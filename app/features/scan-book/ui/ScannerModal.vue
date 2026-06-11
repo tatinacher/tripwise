@@ -3,19 +3,24 @@ import { useScanner } from '../model/use-scanner'
 
 const emit = defineEmits<{ detected: [isbn: string]; close: [] }>()
 
+const elementId = `scanner-${useId()}`
 const videoRef = ref<HTMLVideoElement | null>(null)
-const { error, startScan, stopScan } = useScanner()
+const { error, mode, onResult, startScanner, stopScanner } = useScanner()
+
+onResult((isbn) => emit('detected', isbn))
 
 onMounted(() => {
-  if (!videoRef.value) return
-  startScan(videoRef.value)
-    .then((isbn) => emit('detected', isbn))
-    .catch(() => {
-      /* error message is exposed via `error` */
-    })
+  startScanner({ videoElement: videoRef.value, elementId }).catch(() => {
+    /* error message is exposed via `error` */
+  })
 })
 
-onUnmounted(stopScan)
+onUnmounted(stopScanner)
+
+function close() {
+  void stopScanner()
+  emit('close')
+}
 </script>
 
 <template>
@@ -26,15 +31,30 @@ onUnmounted(stopScan)
         type="button"
         aria-label="Close scanner"
         class="grid place-items-center w-10 h-10 rounded-xl bg-surface-2 text-content text-xl"
-        @click="stopScan(); emit('close')"
+        @click="close"
       >
         ✕
       </button>
     </header>
 
     <div class="relative grow overflow-hidden">
-      <video ref="videoRef" class="absolute inset-0 w-full h-full object-cover" muted playsinline autoplay />
-      <div class="pointer-events-none absolute inset-x-10 top-1/2 h-32 -translate-y-1/2 rounded-card border-2 border-primary"></div>
+      <video
+        v-show="mode === 'detector'"
+        ref="videoRef"
+        class="absolute inset-0 w-full h-full object-cover"
+        muted
+        playsinline
+        autoplay
+      ></video>
+      <div
+        v-show="mode === 'html5'"
+        :id="elementId"
+        class="absolute inset-0 w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover"
+      ></div>
+      <div
+        v-if="mode === 'detector'"
+        class="pointer-events-none absolute inset-x-10 top-1/2 h-32 -translate-y-1/2 rounded-card border-2 border-primary"
+      ></div>
     </div>
 
     <p
