@@ -1,5 +1,5 @@
-import { BOOKS_STORAGE_KEY } from '~/shared/config'
-import { createId, readJson, writeJson } from '~/shared/lib'
+import { BOOKS_DB_NAME, BOOKS_DB_STORE, BOOKS_DB_VERSION, BOOKS_STORAGE_KEY } from '~/shared/config'
+import { createId, createIdbStore, readJson } from '~/shared/lib'
 import type { Book, BookDraft } from './types'
 
 // Module-level singleton state — every consumer shares one source of truth
@@ -7,12 +7,31 @@ import type { Book, BookDraft } from './types'
 const books = ref<Book[]>([])
 const ready = ref(false)
 
-function hydrate() {
-  if (ready.value || !import.meta.client) return
-  books.value = readJson<Book[]>(BOOKS_STORAGE_KEY, [])
-  ready.value = true
-  // Persist on every mutation.
-  watch(books, (value) => writeJson(BOOKS_STORAGE_KEY, value), { deep: true })
+const db = createIdbStore(BOOKS_DB_NAME, BOOKS_DB_STORE, BOOKS_DB_VERSION)
+let hydrating: Promise<void> | null = null
+
+function hydrate(): Promise<void> {
+  if (!import.meta.client) return Promise.resolve()
+  if (!hydrating) {
+    hydrating = (async () => {
+      const stored = await db.get<Book[]>(BOOKS_STORAGE_KEY)
+      if (stored) {
+        books.value = stored
+      } else {
+        // One-time migration from the previous localStorage-based storage.
+        const legacy = readJson<Book[] | null>(BOOKS_STORAGE_KEY, null)
+        if (legacy) {
+          books.value = legacy
+          await db.set(BOOKS_STORAGE_KEY, legacy)
+          localStorage.removeItem(BOOKS_STORAGE_KEY)
+        }
+      }
+      ready.value = true
+      // Persist on every mutation.
+      watch(books, (value) => db.set(BOOKS_STORAGE_KEY, value), { deep: true })
+    })()
+  }
+  return hydrating
 }
 
 export function useBooks() {

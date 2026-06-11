@@ -12,12 +12,3 @@ export function readJson<T>(key: string, fallback: T): T {
     return fallback
   }
 }
-
-export function writeJson(key: string, value: unknown): void {
-  if (!import.meta.client) return
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    /* quota exceeded / private mode — ignore */
-  }
-}
