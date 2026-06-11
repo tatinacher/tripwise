@@ -39,9 +39,11 @@ export function createIdbStore(dbName: string, storeName: string, version = 1) {
     if (!import.meta.client || !('indexedDB' in window)) return
     try {
       const db = await getDb()
+      // Strip Vue reactivity (Proxies aren't structured-clonable by IndexedDB).
+      const plain = JSON.parse(JSON.stringify(value))
       await new Promise<void>((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite')
-        tx.objectStore(storeName).put(value, key)
+        tx.objectStore(storeName).put(plain, key)
         tx.oncomplete = () => resolve()
         tx.onerror = () => reject(tx.error)
       })
