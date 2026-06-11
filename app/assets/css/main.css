@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+/* Design tokens exposed as Tailwind utilities (bg-surface, text-muted, rounded-card, …) */
+@theme {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-2: #334155;
+  --color-line: #334155;
+  --color-content: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-primary: #2dd4bf;
+  --color-primary-ink: #042f2e;
+  --color-danger: #f87171;
+
+  --radius-card: 16px;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg text-content;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

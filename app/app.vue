@@ -1,6 +1,11 @@
+<script setup lang="ts">
+import { PwaPrompt } from '~/widgets/pwa-prompt'
+</script>
+
 <template>
-  <div>
+  <div class="min-h-screen">
     <NuxtRouteAnnouncer />
-    <NuxtWelcome />
+    <NuxtPage />
+    <PwaPrompt />
   </div>
 </template>
