@@ -36,6 +36,8 @@ export function useBooks() {
     const book: Book = {
       id: createId(),
       title: draft.title.trim(),
+      author: draft.author.trim(),
+      isbn: draft.isbn.trim(),
       description: draft.description.trim(),
       status: draft.status,
       createdAt: Date.now(),
@@ -48,6 +50,8 @@ export function useBooks() {
     const book = getById(id)
     if (!book) return
     book.title = draft.title.trim()
+    book.author = draft.author.trim()
+    book.isbn = draft.isbn.trim()
     book.description = draft.description.trim()
     book.status = draft.status
   }
